@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aventura Marina: Las Tablas de Multiplicar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            user-select: none;
+        }
+        .bg-pirate {
+            background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+        }
+        .bg-ocean {
+            background: linear-gradient(180deg, #00b4db 0%, #0083b0 100%);
+        }
+        .bg-deepsea {
+            background: linear-gradient(180deg, #02111d 0%, #032b43 100%);
+        }
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+        .pulse-slow {
+            animation: pulse 2s infinite;
+        }
+        .shark-approach {
+            transition: all 0.5s ease-in-out;
+        }
+        .bubble-btn {
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .bubble-btn:hover {
+            transform: scale(1.08);
+        }
+        .bubble-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <!-- ENCABEZADO Y ESTADÍSTICAS -->
+    <header id="game-header" class="hidden bg-slate-800/90 border-b-4 border-yellow-500 p-3 sticky top-0 z-50 backdrop-blur-md shadow-lg">
+        <div class="max-w-5xl mx-auto flex justify-between items-center px-2">
+            <!-- Avatar y Nombre -->
+            <div class="flex items-center space-x-3 bg-slate-700/80 px-3 py-1.5 rounded-full border-2 border-yellow-400">
+                <span id="player-avatar-display" class="text-2xl">🏴‍☠️</span>
+                <div>
+                    <h3 id="player-name-display" class="font-bold text-yellow-300 text-sm md:text-base leading-none">Grumete</h3>
+                    <span id="player-rank" class="text-xs text-slate-300 font-semibold">Nivel 1</span>
+                </div>
+            </div>
+
+            <!-- Monedas y Puntuación -->
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-1.5 bg-amber-500/20 px-3 py-1.5 rounded-full border-2 border-amber-400">
+                    <i class="fa-solid fa-coins text-yellow-400 text-xl animate-bounce"></i>
+                    <span id="coins-count" class="font-bold text-yellow-300 text-lg">0</span>
+                </div>
+                <button onclick="showShopModal()" class="bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold px-3 py-1.5 rounded-full shadow-md text-sm flex items-center gap-1 transition">
+                    <i class="fa-solid fa-store"></i> <span class="hidden sm:inline">Tienda</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="flex-grow flex items-center justify-center p-4 relative">
+
+        <!-- PANTALLA 1: REGISTRO E INICIO -->
+        <section id="screen-welcome" class="w-full max-w-lg bg-slate-800/90 border-4 border-yellow-500 rounded-3xl p-6 shadow-2xl text-center relative z-10 floating">
+            <div class="text-5xl mb-2">🦜⚓</div>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-yellow-400 mb-2 drop-shadow-md">
+                Aventura Marina
+            </h1>
+            <p class="text-cyan-300 font-semibold mb-6 text-sm md:text-base">
+                ¡Aprende las tablas del 2, 3, 4 y 5 jugando!
+            </p>
+
+            <form id="form-register" onsubmit="startGame(event)" class="space-y-5">
+                <div>
+                    <label class="block text-left text-sm font-bold text-slate-300 mb-1">Escribe tu Nombre de Capitán/a:</label>
+                    <input type="text" id="input-username" required maxlength="12" placeholder="Ej. Valentina" 
+                        class="w-full text-center px-4 py-3 rounded-2xl bg-slate-700 text-yellow-300 font-bold border-2 border-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-lg">
+                </div>
+
+                <div>
+                    <label class="block text-left text-sm font-bold text-slate-300 mb-2">Elige tu Avatar:</label>
+                    <div class="grid grid-cols-4 gap-3">
+                        <button type="button" onclick="selectAvatar('🏴‍☠️', this)" class="avatar-btn p-3 text-3xl bg-slate-700 rounded-2xl border-4 border-yellow-400 hover:scale-105 transition">🏴‍☠️</button>
+                        <button type="button" onclick="selectAvatar('🧜‍♀️', this)" class="avatar-btn p-3 text-3xl bg-slate-700 rounded-2xl border-4 border-transparent hover:scale-105 transition">🧜‍♀️</button>
+                        <button type="button" onclick="selectAvatar('🐙', this)" class="avatar-btn p-3 text-3xl bg-slate-700 rounded-2xl border-4 border-transparent hover:scale-105 transition">🐙</button>
+                        <button type="button" onclick="selectAvatar('🐬', this)" class="avatar-btn p-3 text-3xl bg-slate-700 rounded-2xl border-4 border-transparent hover:scale-105 transition">🐬</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 text-xl font-extrabold rounded-2xl shadow-lg hover:from-yellow-300 hover:to-amber-400 transform hover:-translate-y-1 transition">
+                    ¡¡A JUGAR!! 🚀
+                </button>
+            </form>
+        </section>
+
+        <!-- PANTALLA 2: SELECCIÓN DE DIFICULTAD -->
+        <section id="screen-difficulty" class="hidden w-full max-w-2xl bg-slate-800/90 border-4 border-cyan-500 rounded-3xl p-6 shadow-2xl text-center">
+            <h2 class="text-3xl font-extrabold text-cyan-300 mb-2">Selecciona la Dificultad</h2>
+            <p class="text-slate-300 text-sm mb-6">Completa cada nivel superando sus 3 mundos fantásticos.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Básico -->
+                <div onclick="selectDifficulty('basic')" class="cursor-pointer bg-slate-700 hover:bg-slate-600 border-4 border-green-400 rounded-2xl p-5 transform hover:-translate-y-2 transition shadow-lg text-center">
+                    <div class="text-4xl mb-2">⚓</div>
+                    <h3 class="text-xl font-bold text-green-400">BÁSICO</h3>
+                    <p class="text-xs text-slate-300 mt-2">Tablas del 2 y 3.<br>Más tiempo e incentivos.</p>
+                    <span class="inline-block mt-4 bg-green-500 text-slate-900 font-extrabold text-xs px-3 py-1 rounded-full">15 Ejercicios / mundo</span>
+                </div>
+
+                <!-- Medio -->
+                <div onclick="selectDifficulty('medium')" class="cursor-pointer bg-slate-700 hover:bg-slate-600 border-4 border-yellow-400 rounded-2xl p-5 transform hover:-translate-y-2 transition shadow-lg text-center">
+                    <div class="text-4xl mb-2">🧭</div>
+                    <h3 class="text-xl font-bold text-yellow-400">MEDIO</h3>
+                    <p class="text-xs text-slate-300 mt-2">Tablas del 2, 3 y 4.<br>Tiempo moderado.</p>
+                    <span class="inline-block mt-4 bg-yellow-500 text-slate-900 font-extrabold text-xs px-3 py-1 rounded-full">15 Ejercicios / mundo</span>
+                </div>
+
+                <!-- Experto -->
+                <div onclick="selectDifficulty('expert')" class="cursor-pointer bg-slate-700 hover:bg-slate-600 border-4 border-red-500 rounded-2xl p-5 transform hover:-translate-y-2 transition shadow-lg text-center">
+                    <div class="text-4xl mb-2">👑</div>
+                    <h3 class="text-xl font-bold text-red-400">EXPERTO</h3>
+                    <p class="text-xs text-slate-300 mt-2">Tablas del 2, 3, 4 y 5.<br>¡El tiburón es rápido!</p>
+                    <span class="inline-block mt-4 bg-red-500 text-white font-extrabold text-xs px-3 py-1 rounded-full">15 Ejercicios / mundo</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANTALLA 3: MAPA DE MUNDOS -->
+        <section id="screen-worlds" class="hidden w-full max-w-3xl bg-slate-800/90 border-4 border-yellow-500 rounded-3xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="goToDifficulty()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl font-bold text-sm">
+                    <i class="fa-solid fa-arrow-left"></i> Cambiar Nivel
+                </button>
+                <h2 id="world-difficulty-title" class="text-2xl font-extrabold text-yellow-400">Mundos Disponibles</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- Mundo 1 -->
+                <div id="card-world-1" class="bg-gradient-to-b from-amber-700 to-amber-900 border-4 border-amber-400 rounded-2xl p-4 flex flex-col justify-between h-64 relative overflow-hidden shadow-xl">
+                    <div>
+                        <span class="bg-amber-400 text-slate-900 text-xs font-black px-2 py-0.5 rounded-full">MUNDO 1</span>
+                        <h3 class="text-xl font-black text-yellow-300 mt-1">Barco Pirata</h3>
+                        <p class="text-xs text-amber-100 mt-1">Resuelve los cañonazos matemáticos para ganar botines.</p>
+                    </div>
+                    <div class="text-6xl text-center my-2 floating">🦜🏴‍☠️</div>
+                    <button onclick="startWorld(1)" class="w-full bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold py-2 rounded-xl text-sm shadow">
+                        ¡Entrar!
+                    </button>
+                </div>
+
+                <!-- Mundo 2 -->
+                <div id="card-world-2" class="bg-gradient-to-b from-cyan-700 to-blue-900 border-4 border-cyan-400 rounded-2xl p-4 flex flex-col justify-between h-64 relative overflow-hidden shadow-xl opacity-60">
+                    <div>
+                        <span class="bg-cyan-400 text-slate-900 text-xs font-black px-2 py-0.5 rounded-full">MUNDO 2</span>
+                        <h3 class="text-xl font-black text-cyan-200 mt-1">Submarino Tesoros</h3>
+                        <p class="text-xs text-cyan-100 mt-1">Atrapa las burbujas correctas sumergido bajo el agua.</p>
+                    </div>
+                    <div class="text-6xl text-center my-2">🏓🥽</div>
+                    <button id="btn-world-2" onclick="startWorld(2)" disabled class="w-full bg-slate-600 text-slate-400 font-extrabold py-2 rounded-xl text-sm cursor-not-allowed">
+                        Bloqueado 🔒
+                    </button>
+                </div>
+
+                <!-- Mundo 3 -->
+                <div id="card-world-3" class="bg-gradient-to-b from-blue-900 to-slate-950 border-4 border-red-500 rounded-2xl p-4 flex flex-col justify-between h-64 relative overflow-hidden shadow-xl opacity-60">
+                    <div>
+                        <span class="bg-red-500 text-white text-xs font-black px-2 py-0.5 rounded-full">MUNDO 3</span>
+                        <h3 class="text-xl font-black text-red-400 mt-1">Escape del Tiburón</h3>
+                        <p class="text-xs text-slate-300 mt-1">¡Responde rápido con reloj de tiempo antes que te alcance!</p>
+                    </div>
+                    <div class="text-6xl text-center my-2">🦈🌊</div>
+                    <button id="btn-world-3" onclick="startWorld(3)" disabled class="w-full bg-slate-600 text-slate-400 font-extrabold py-2 rounded-xl text-sm cursor-not-allowed">
+                        Bloqueado 🔒
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANTALLA DE JUEGO MUNDO 1: BARCO PIRATA -->
+        <section id="game-world-1" class="hidden w-full max-w-2xl bg-slate-800/90 border-4 border-amber-500 rounded-3xl p-6 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4">
+                <span class="bg-amber-500 text-slate-900 text-xs font-black px-3 py-1 rounded-full">
+                    MUNDO 1: BARCO PIRATA
+                </span>
+                <span id="w1-progress" class="font-bold text-yellow-300 text-sm">Ejercicio 1 / 15</span>
+            </div>
+
+            <!-- Progreso en Barra -->
+            <div class="w-full bg-slate-700 h-3 rounded-full mb-6 overflow-hidden border border-slate-600">
+                <div id="w1-progress-bar" class="bg-amber-400 h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <div class="text-center py-4 bg-slate-900/60 rounded-2xl border-2 border-amber-500/40 mb-6">
+                <span class="text-sm text-amber-300 font-semibold block mb-1">Resuelve la multiplicación del cañón:</span>
+                <div id="w1-question" class="text-5xl md:text-6xl font-black text-yellow-400 tracking-wider">
+                    2 x 3 = ?
+                </div>
+            </div>
+
+            <!-- Alternativas de Respuestas -->
+            <div id="w1-options" class="grid grid-cols-2 gap-4">
+                <!-- Opciones generadas con JS -->
+            </div>
+        </section>
+
+        <!-- PANTALLA DE JUEGO MUNDO 2: SUBMARINO ATRAPA TESOROS -->
+        <section id="game-world-2" class="hidden w-full max-w-2xl bg-slate-800/90 border-4 border-cyan-500 rounded-3xl p-6 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4">
+                <span class="bg-cyan-500 text-slate-900 text-xs font-black px-3 py-1 rounded-full">
+                    MUNDO 2: SUBMARINO TESOROS
+                </span>
+                <span id="w2-progress" class="font-bold text-cyan-300 text-sm">Ejercicio 1 / 15</span>
+            </div>
+
+            <div class="w-full bg-slate-700 h-3 rounded-full mb-4 overflow-hidden border border-slate-600">
+                <div id="w2-progress-bar" class="bg-cyan-400 h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <div class="text-center py-3 bg-cyan-950/70 rounded-2xl border-2 border-cyan-500/40 mb-4">
+                <p class="text-sm text-cyan-200">¡Presiona el cofre de tesoro correcto!</p>
+                <div id="w2-question" class="text-4xl md:text-5xl font-black text-cyan-300 my-1">
+                    4 x 5 = ?
+                </div>
+            </div>
+
+            <div id="w2-options" class="grid grid-cols-2 md:grid-cols-4 gap-3 py-4">
+                <!-- Opciones en forma de burbujas/cofres -->
+            </div>
+        </section>
+
+        <!-- PANTALLA DE JUEGO MUNDO 3: ESCAPE DEL TIBURÓN -->
+        <section id="game-world-3" class="hidden w-full max-w-2xl bg-slate-900/95 border-4 border-red-500 rounded-3xl p-6 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-2">
+                <span class="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full animate-pulse">
+                    MUNDO 3: ESCAPE DEL TIBURÓN
+                </span>
+                <span id="w3-progress" class="font-bold text-red-400 text-sm">Ejercicio 1 / 15</span>
+            </div>
+
+            <!-- Indicador del Tiburón / Distancia -->
+            <div class="bg-slate-800 p-3 rounded-2xl border-2 border-red-500/50 mb-4">
+                <div class="flex justify-between text-xs text-slate-300 font-bold mb-1">
+                    <span>Tiburón 🦈</span>
+                    <span id="shark-timer-text" class="text-yellow-400">Tiempo: 10s</span>
+                    <span>Tú 🏊‍♂️</span>
+                </div>
+                <div class="w-full bg-slate-900 h-8 rounded-full relative overflow-hidden flex items-center px-2 border border-red-900">
+                    <div id="shark-track" class="w-full flex justify-between items-center relative">
+                        <span id="shark-icon" class="text-2xl transition-all duration-500 absolute left-0">🦈</span>
+                        <span id="player-icon" class="text-2xl transition-all duration-500 absolute right-0">🏊‍♂️</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center py-3 bg-red-950/40 rounded-2xl border-2 border-red-500/40 mb-4">
+                <span class="text-xs text-red-300 block">¡Responde rápido antes de que expire el tiempo!</span>
+                <div id="w3-question" class="text-4xl md:text-5xl font-black text-yellow-300 my-1">
+                    3 x 4 = ?
+                </div>
+            </div>
+
+            <div id="w3-options" class="grid grid-cols-2 gap-3">
+                <!-- Opciones -->
+            </div>
+        </section>
+
+        <!-- MODAL TIENDA -->
+        <div id="shop-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-slate-800 border-4 border-yellow-500 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                    <h3 class="text-2xl font-black text-yellow-400 flex items-center gap-2">
+                        <i class="fa-solid fa-store"></i> Tienda Pirata
+                    </h3>
+                    <button onclick="closeShopModal()" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+                </div>
+                <p class="text-xs text-slate-300 mb-4">Usa las monedas ganadas para comprar sombreros y títulos:</p>
+
+                <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
+                    <div class="flex items-center justify-between p-3 bg-slate-700 rounded-xl border border-slate-600">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">👑</span>
+                            <div>
+                                <h4 class="font-bold text-sm text-yellow-300">Corona Real</h4>
+                                <span class="text-xs text-slate-300">Desbloquea el título "Rey del Mar"</span>
+                            </div>
+                        </div>
+                        <button onclick="buyItem('Corona Real', 50, '👑')" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-3 py-1 rounded-lg text-xs">
+                            50 🪙
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-slate-700 rounded-xl border border-slate-600">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">⚓</span>
+                            <div>
+                                <h4 class="font-bold text-sm text-cyan-300">Ancla de Oro</h4>
+                                <span class="text-xs text-slate-300">Título "Capitán Legendario"</span>
+                            </div>
+                        </div>
+                        <button onclick="buyItem('Ancla de Oro', 30, '⚓')" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-3 py-1 rounded-lg text-xs">
+                            30 🪙
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-slate-700 rounded-xl border border-slate-600">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">🦜</span>
+                            <div>
+                                <h4 class="font-bold text-sm text-green-300">Loro Sabio</h4>
+                                <span class="text-xs text-slate-300">Título "Maestro del Cálculo"</span>
+                            </div>
+                        </div>
+                        <button onclick="buyItem('Loro Sabio', 20, '🦜')" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-3 py-1 rounded-lg text-xs">
+                            20 🪙
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="closeShopModal()" class="w-full mt-5 py-2.5 bg-slate-700 hover:bg-slate-600 font-bold text-sm rounded-xl">
+                    Volver al Juego
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL DE FELICITACIONES / FIN DE MUNDO -->
+        <div id="modal-success" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-slate-800 border-4 border-green-500 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl floating">
+                <div class="text-6xl mb-2">🎉🏆</div>
+                <h3 class="text-2xl font-black text-green-400 mb-1">¡Mundo Completado!</h3>
+                <p id="success-message" class="text-sm text-slate-200 mb-4">¡Has dominado este nivel marina con éxito!</p>
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 mb-4">
+                    <p class="text-xs text-slate-400">Recompensa obtenida:</p>
+                    <p id="success-reward" class="text-xl font-bold text-yellow-400">+15 Monedas 🪙</p>
+                </div>
+                <button onclick="closeSuccessModal()" class="w-full py-3 bg-green-500 hover:bg-green-400 text-slate-900 font-extrabold rounded-xl shadow-lg text-base">
+                    Continuar 🚀
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // ESTADO GLOBAL DEL JUEGO
+        const gameState = {
+            playerName: '',
+            avatar: '🏴‍☠️',
+            coins: 0,
+            difficulty: 'basic', // basic, medium, expert
+            currentWorld: 1, // 1, 2, 3
+            unlockedWorlds: {
+                basic: 1,
+                medium: 1,
+                expert: 1
+            },
+            currentQuestionIndex: 0,
+            totalQuestions: 15,
+            questions: [],
+            sharkTimer: null,
+            timeRemaining: 10,
+            sharkPosition: 0 // 0 a 100%
+        };
+
+        // Tablas permitidas por dificultad para segundo grado (2, 3, 4, 5)
+        const difficultyTables = {
+            basic: [2, 3],
+            medium: [2, 3, 4],
+            expert: [2, 3, 4, 5]
+        };
+
+        // SELECCIÓN DE AVATAR
+        function selectAvatar(avatarEmoji, buttonElement) {
+            gameState.avatar = avatarEmoji;
+            document.querySelectorAll('.avatar-btn').forEach(btn => {
+                btn.classList.remove('border-yellow-400');
+                btn.classList.add('border-transparent');
+            });
+            buttonElement.classList.remove('border-transparent');
+            buttonElement.classList.add('border-yellow-400');
+        }
+
+        // INICIAR REGISTRO DE JUEGO
+        function startGame(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('input-username').value.trim();
+            if (!nameInput) return;
+
+            gameState.playerName = nameInput;
+            document.getElementById('player-name-display').innerText = gameState.playerName;
+            document.getElementById('player-avatar-display').innerText = gameState.avatar;
+            document.getElementById('game-header').classList.remove('hidden');
+
+            goToDifficulty();
+        }
+
+        // NAVEGACIÓN ENTRE PANTALLAS
+        function hideAllScreens() {
+            document.getElementById('screen-welcome').classList.add('hidden');
+            document.getElementById('screen-difficulty').classList.add('hidden');
+            document.getElementById('screen-worlds').classList.add('hidden');
+            document.getElementById('game-world-1').classList.add('hidden');
+            document.getElementById('game-world-2').classList.add('hidden');
+            document.getElementById('game-world-3').classList.add('hidden');
+            clearInterval(gameState.sharkTimer);
+        }
+
+        function goToDifficulty() {
+            hideAllScreens();
+            document.getElementById('screen-difficulty').classList.remove('hidden');
+        }
+
+        function selectDifficulty(diff) {
+            gameState.difficulty = diff;
+            const titles = {
+                basic: 'Nivel Básico (Tablas 2 y 3)',
+                medium: 'Nivel Medio (Tablas 2, 3 y 4)',
+                expert: 'Nivel Experto (Tablas 2, 3, 4 y 5)'
+            };
+            document.getElementById('world-difficulty-title').innerText = titles[diff];
+            updateWorldUnlocks();
+            hideAllScreens();
+            document.getElementById('screen-worlds').classList.remove('hidden');
+        }
+
+        function updateWorldUnlocks() {
+            const unlocked = gameState.unlockedWorlds[gameState.difficulty];
+            
+            // Mundo 2
+            const w2Card = document.getElementById('card-world-2');
+            const w2Btn = document.getElementById('btn-world-2');
+            if (unlocked >= 2) {
+                w2Card.classList.remove('opacity-60');
+                w2Btn.disabled = false;
+                w2Btn.innerText = '¡Entrar!';
+                w2Btn.className = 'w-full bg-cyan-400 hover:bg-cyan-300 text-slate-900 font-extrabold py-2 rounded-xl text-sm shadow';
+            } else {
+                w2Card.classList.add('opacity-60');
+                w2Btn.disabled = true;
+                w2Btn.innerText = 'Bloqueado 🔒';
+                w2Btn.className = 'w-full bg-slate-600 text-slate-400 font-extrabold py-2 rounded-xl text-sm cursor-not-allowed';
+            }
+
+            // Mundo 3
+            const w3Card = document.getElementById('card-world-3');
+            const w3Btn = document.getElementById('btn-world-3');
+            if (unlocked >= 3) {
+                w3Card.classList.remove('opacity-60');
+                w3Btn.disabled = false;
+                w3Btn.innerText = '¡Entrar!';
+                w3Btn.className = 'w-full bg-red-500 hover:bg-red-400 text-white font-extrabold py-2 rounded-xl text-sm shadow';
+            } else {
+                w3Card.classList.add('opacity-60');
+                w3Btn.disabled = true;
+                w3Btn.innerText = 'Bloqueado 🔒';
+                w3Btn.className = 'w-full bg-slate-600 text-slate-400 font-extrabold py-2 rounded-xl text-sm cursor-not-allowed';
+            }
+        }
+
+        // GENERADOR DE EJERCICIOS (15 EJERCICIOS POR MUNDO)
+        function generateQuestions() {
+            const tables = difficultyTables[gameState.difficulty];
+            const list = [];
+            for (let i = 0; i < gameState.totalQuestions; i++) {
+                const num1 = tables[Math.floor(Math.random() * tables.length)];
+                const num2 = Math.floor(Math.random() * 10) + 1; // 1 al 10
+                const answer = num1 * num2;
+
+                // Generar 3 opciones incorrectas sin repetir
+                const options = new Set([answer]);
+                while (options.size < 4) {
+                    const offset = (Math.floor(Math.random() * 5) + 1) * (Math.random() < 0.5 ? 1 : -1);
+                    const fake = answer + offset;
+                    if (fake > 0 && fake <= 50) options.add(fake);
+                }
+
+                list.push({
+                    num1,
+                    num2,
+                    answer,
+                    options: Array.from(options).sort(() => Math.random() - 0.5)
+                });
+            }
+            return list;
+        }
+
+        // INICIAR UN MUNDO ESPECÍFICO
+        function startWorld(worldNumber) {
+            gameState.currentWorld = worldNumber;
+            gameState.currentQuestionIndex = 0;
+            gameState.questions = generateQuestions();
+            hideAllScreens();
+
+            if (worldNumber === 1) {
+                document.getElementById('game-world-1').classList.remove('hidden');
+                document.body.className = "bg-pirate text-white min-h-screen flex flex-col justify-between overflow-x-hidden";
+                renderWorld1Question();
+            } else if (worldNumber === 2) {
+                document.getElementById('game-world-2').classList.remove('hidden');
+                document.body.className = "bg-ocean text-white min-h-screen flex flex-col justify-between overflow-x-hidden";
+                renderWorld2Question();
+            } else if (worldNumber === 3) {
+                document.getElementById('game-world-3').classList.remove('hidden');
+                document.body.className = "bg-deepsea text-white min-h-screen flex flex-col justify-between overflow-x-hidden";
+                gameState.sharkPosition = 0;
+                renderWorld3Question();
+            }
+        }
+
+        // --- MUNDO 1: BARCO PIRATA ---
+        function renderWorld1Question() {
+            const q = gameState.questions[gameState.currentQuestionIndex];
+            document.getElementById('w1-progress').innerText = `Ejercicio ${gameState.currentQuestionIndex + 1} / ${gameState.totalQuestions}`;
+            document.getElementById('w1-progress-bar').style.width = `${((gameState.currentQuestionIndex) / gameState.totalQuestions) * 100}%`;
+            document.getElementById('w1-question').innerText = `${q.num1} x ${q.num2} = ?`;
+
+            const optionsContainer = document.getElementById('w1-options');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "bubble-btn py-4 bg-amber-500 hover:bg-amber-400 border-2 border-yellow-300 text-slate-900 font-extrabold text-2xl rounded-2xl shadow-lg";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswerWorld1(opt, q.answer);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswerWorld1(selected, correct) {
+            if (selected === correct) {
+                addCoins(2);
+                nextQuestionOrFinish();
+            } else {
+                showFeedbackMessage("¡Ayy pirate! Respuesta incorrecta. Inténtalo de nuevo.", false);
+            }
+        }
+
+        // --- MUNDO 2: SUBMARINO TESOROS ---
+        function renderWorld2Question() {
+            const q = gameState.questions[gameState.currentQuestionIndex];
+            document.getElementById('w2-progress').innerText = `Ejercicio ${gameState.currentQuestionIndex + 1} / ${gameState.totalQuestions}`;
+            document.getElementById('w2-progress-bar').style.width = `${((gameState.currentQuestionIndex) / gameState.totalQuestions) * 100}%`;
+            document.getElementById('w2-question').innerText = `${q.num1} x ${q.num2} = ?`;
+
+            const optionsContainer = document.getElementById('w2-options');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "bubble-btn flex flex-col items-center justify-center p-4 bg-cyan-700/80 hover:bg-cyan-600 border-2 border-cyan-300 rounded-2xl text-yellow-300 font-black text-2xl shadow-xl";
+                btn.innerHTML = `<span class="text-3xl mb-1">🏴‍☠️🪙</span><span>${opt}</span>`;
+                btn.onclick = () => checkAnswerWorld2(opt, q.answer);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswerWorld2(selected, correct) {
+            if (selected === correct) {
+                addCoins(3);
+                nextQuestionOrFinish();
+            } else {
+                showFeedbackMessage("¡Ooh no! El cofre estaba vacío. Inténtalo otra vez.", false);
+            }
+        }
+
+        // --- MUNDO 3: ESCAPE DEL TIBURÓN (CON TIEMPO) ---
+        function renderWorld3Question() {
+            clearInterval(gameState.sharkTimer);
+            const q = gameState.questions[gameState.currentQuestionIndex];
+            document.getElementById('w3-progress').innerText = `Ejercicio ${gameState.currentQuestionIndex + 1} / ${gameState.totalQuestions}`;
+            document.getElementById('w3-question').innerText = `${q.num1} x ${q.num2} = ?`;
+
+            const optionsContainer = document.getElementById('w3-options');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "bubble-btn py-3.5 bg-red-600 hover:bg-red-500 border-2 border-red-300 text-white font-extrabold text-2xl rounded-2xl shadow-lg";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswerWorld3(opt, q.answer);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Configurar Tiempo según dificultad
+            gameState.timeRemaining = gameState.difficulty === 'basic' ? 12 : (gameState.difficulty === 'medium' ? 9 : 7);
+            updateSharkUI();
+
+            gameState.sharkTimer = setInterval(() => {
+                gameState.timeRemaining--;
+                updateSharkUI();
+                if (gameState.timeRemaining <= 0) {
+                    clearInterval(gameState.sharkTimer);
+                    gameState.sharkPosition = Math.min(100, gameState.sharkPosition + 25);
+                    updateSharkPosition();
+                    if (gameState.sharkPosition >= 100) {
+                        showFeedbackMessage("¡El tiburón te ha alcanzado! Reiniciando el nivel...", false);
+                        startWorld(3);
+                    } else {
+                        showFeedbackMessage("¡Se acabó el tiempo de la pregunta! El tiburón avanza...", false);
+                        renderWorld3Question();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateSharkUI() {
+            document.getElementById('shark-timer-text').innerText = `Tiempo: ${gameState.timeRemaining}s`;
+        }
+
+        function updateSharkPosition() {
+            const sharkIcon = document.getElementById('shark-icon');
+            sharkIcon.style.left = `${gameState.sharkPosition}%`;
+        }
+
+        function checkAnswerWorld3(selected, correct) {
+            clearInterval(gameState.sharkTimer);
+            if (selected === correct) {
+                addCoins(4);
+                // Nadar alejándose un poco si se equivocó antes
+                gameState.sharkPosition = Math.max(0, gameState.sharkPosition - 10);
+                updateSharkPosition();
+                nextQuestionOrFinish();
+            } else {
+                gameState.sharkPosition = Math.min(100, gameState.sharkPosition + 20);
+                updateSharkPosition();
+                if (gameState.sharkPosition >= 100) {
+                    showFeedbackMessage("¡El tiburón te ha alcanzado! Reiniciando el mundo...", false);
+                    startWorld(3);
+                } else {
+                    showFeedbackMessage("¡Cuidado! Te equivocaste y el tiburón se acercó.", false);
+                    renderWorld3Question();
+                }
+            }
+        }
+
+        // CONTROL DE PROGRESO DE PREGUNTAS
+        function nextQuestionOrFinish() {
+            gameState.currentQuestionIndex++;
+
+            if (gameState.currentQuestionIndex >= gameState.totalQuestions) {
+                // Completado el Mundo Actual
+                const currentUnlocked = gameState.unlockedWorlds[gameState.difficulty];
+                if (gameState.currentWorld === currentUnlocked && currentUnlocked < 3) {
+                    gameState.unlockedWorlds[gameState.difficulty]++;
+                }
+                showSuccessModal();
+            } else {
+                // Siguiente ejercicio según el mundo
+                if (gameState.currentWorld === 1) renderWorld1Question();
+                if (gameState.currentWorld === 2) renderWorld2Question();
+                if (gameState.currentWorld === 3) renderWorld3Question();
+            }
+        }
+
+        // RECOMPENSAS Y TIENDA
+        function addCoins(amount) {
+            gameState.coins += amount;
+            document.getElementById('coins-count').innerText = gameState.coins;
+        }
+
+        function showShopModal() {
+            document.getElementById('shop-modal').classList.remove('hidden');
+        }
+
+        function closeShopModal() {
+            document.getElementById('shop-modal').classList.add('hidden');
+        }
+
+        function buyItem(itemName, price, itemAvatar) {
+            if (gameState.coins >= price) {
+                gameState.coins -= price;
+                document.getElementById('coins-count').innerText = gameState.coins;
+                gameState.avatar = itemAvatar;
+                document.getElementById('player-avatar-display').innerText = gameState.avatar;
+                document.getElementById('player-rank').innerText = itemName;
+                alert(`¡Felicidades! Has comprado: ${itemName}`);
+            } else {
+                alert("¡No tienes suficientes monedas todavía! Sigue jugando para ganar más.");
+            }
+        }
+
+        function showSuccessModal() {
+            const rewardCoins = gameState.currentWorld * 15;
+            addCoins(rewardCoins);
+            document.getElementById('success-reward').innerText = `+${rewardCoins} Monedas 🪙`;
+            document.getElementById('modal-success').classList.remove('hidden');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('modal-success').classList.add('hidden');
+            selectDifficulty(gameState.difficulty);
+        }
+
+        // MENSAJE TEMPORAL DE RETROALIMENTACIÓN (Sustituto de alert)
+        function showFeedbackMessage(msg, isSuccess) {
+            const banner = document.createElement('div');
+            banner.className = `fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-2xl font-bold text-white shadow-2xl z-50 text-center transition-all ${isSuccess ? 'bg-green-600' : 'bg-red-600'}`;
+            banner.innerText = msg;
+            document.body.appendChild(banner);
+
+            setTimeout(() => {
+                banner.remove();
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
